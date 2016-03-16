@@ -59,20 +59,31 @@ end_time = None
 if song_srt[-3:]=="srt":
     import pysrt
     s = pysrt.open(song_srt,encoding="iso-8859-1")
-    start_phrase = input("Enter starting phrase ")
-    end_phrase = input("Enter ending phrase ")
+    start_phrase = input("Enter starting phrase: ")
+    end_phrase = input("Enter ending phrase: ")
     start_time = None
     end_time = None
+    lyrics = ""
     for i in s.data:
-        if start_phrase in i.text.lower():
+        set_this = False
+        if start_phrase.lower() in i.text.lower():
             dummy = i.start
             start_time = dummy.minutes * 60 + dummy.seconds
-        if (end_phrase in i.text.lower()) and (start_time is not None):
-            dummy = i.start
+            lyrics = i.text.strip() + " "
+            set_this = True
+        if (end_phrase.lower() in i.text.lower()) and (start_time is not None):
+            dummy = i.end
             end_time = dummy.minutes * 60 + dummy.seconds
+            if not set_this :
+                lyrics += i.text.strip() + " "
             break
+        if (start_time is not None) and (not set_this) :
+            lyrics += i.text.strip() + " "
+
     ttl = s.data[len(s)-1].end
     total_time = ttl.minutes * 60 + ttl.seconds
+
+    print ("lyrics is: \n" + lyrics)
 
     url = "https://www.youtube.com/results?search_query=" + song_full_name[:-6]
     r = requests.get(url)
@@ -84,8 +95,8 @@ if song_srt[-3:]=="srt":
         if(abs(total_time_this - total_time) < 30):
             to_url = "https://www.youtube.com" + row["href"] + "&start=" + str(start_time) + "&end=" + str(end_time)
             break
-    print ("Start Time of phrase is: " + str(start_time/60) + ":" + str(start_time%60))
-    print ("End Time of phrase is: " + str(end_time/60) + ":" + str(end_time%60))
+    print ("Start Time of phrase is: " + str(int(start_time/60)) + ":" + str(start_time%60))
+    print ("End Time of phrase is: " + str(int(end_time/60)) + ":" + str(end_time%60))
     if to_url is not None:
         print ("Post this URL(video): " + to_url)
     else:
