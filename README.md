@@ -37,3 +37,7 @@ Start Time of phrase is: 0:58
 End Time of phrase is: 1:27
 Post this URL(video): https://www.youtube.com/watch?v=cL4uhaQ58Rk&start=58&end=87
 ```
+
+#### History:
+
+Lazy Kharagpur Afternoon -> Coming alone from Nalanda to Azad -> Sun struck me there. -> No Lunch -> Came to Room -> Two Hours Past -> Done!
