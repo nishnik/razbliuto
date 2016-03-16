@@ -1,10 +1,10 @@
 import sys, os
-import urllib2
+#import urllib2
 song_name = ""
 if(len(sys.argv) == 2):
     song_name = sys.argv[1]
 else:
-    song_name = raw_input("Enter the song: ")
+    song_name = input("Enter the song: ")
 import requests,time,re,zipfile
 from bs4 import BeautifulSoup
 
@@ -16,9 +16,9 @@ i = 0
 for row in soup.find_all('div', {"class" : "title"}):
     s = row.find('a')
     i = i + 1
-    print(str(i) + ".) " + s.contents[0])
+    print((str(i) + ".) " + s.contents[0]))
     song_list.append("http://subscene.com/" + s["href"] + "/english")
-choice = int(raw_input("Enter the choice: "))
+choice = int(input("Enter the choice: "))
 
 song_full_name = soup.find_all('div', {"class" : "title"})[choice-1].find('a').contents[0]
 url = song_list[choice-1]
@@ -59,8 +59,8 @@ end_time = None
 if song_srt[-3:]=="srt":
     import pysrt
     s = pysrt.open(song_srt,encoding="iso-8859-1")
-    start_phrase = raw_input("Enter starting phrase ")
-    end_phrase = raw_input("Enter ending phrase ")
+    start_phrase = input("Enter starting phrase ")
+    end_phrase = input("Enter ending phrase ")
     start_time = None
     end_time = None
     for i in s.data:
@@ -84,12 +84,12 @@ if song_srt[-3:]=="srt":
         if(abs(total_time_this - total_time) < 30):
             to_url = "https://www.youtube.com" + row["href"] + "&start=" + str(start_time) + "&end=" + str(end_time)
             break
-    print "Start Time of phrase is: " + str(start_time/60) + ":" + str(start_time%60)
-    print "End Time of phrase is: " + str(end_time/60) + ":" + str(end_time%60)
+    print ("Start Time of phrase is: " + str(start_time/60) + ":" + str(start_time%60))
+    print ("End Time of phrase is: " + str(end_time/60) + ":" + str(end_time%60))
     if to_url is not None:
-        print "Post this URL(video): " + to_url
+        print ("Post this URL(video): " + to_url)
     else:
-        print "Sorry But I couldn't fetch you a video link"
+        print ("Sorry But I couldn't fetch you a video link")
 else:
     print ("Sorry I couldn't find the srt.")
 
