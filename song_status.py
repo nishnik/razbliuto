@@ -11,7 +11,7 @@ else:
 
 url = "http://subscene.com/subtitles/title?q=" + song_name
 r = requests.get(url)
-soup=BeautifulSoup(r.content)
+soup=BeautifulSoup(r.content, "lxml")
 song_list = []
 i = 0
 for row in soup.find_all('div', {"class" : "title"}):
@@ -25,13 +25,13 @@ choice = int(input("Enter the choice: "))
 song_full_name = soup.find_all('div', {"class" : "title"})[choice-1].find('a').contents[0]
 url = song_list[choice-1]
 r = requests.get(url)
-soup=BeautifulSoup(r.content)
+soup=BeautifulSoup(r.content, "lxml")
 row = soup.find('td', {"class" : "a1"})
 gist = row.find('a')
 
 url = "http://subscene.com" + gist["href"]
 r = requests.get(url)
-soup=BeautifulSoup(r.content)
+soup=BeautifulSoup(r.content, "lxml")
 button = soup.find('a', {"id" : "downloadButton"})
 
 url = "http://subscene.com" + button["href"]
@@ -41,6 +41,7 @@ time.sleep(1)
 song_save = "temp_" + song_name
 if os.path.exists(song_save):
     shutil.rmtree(song_save)
+
 subfile=open(song_save + ".zip", 'wb')
 for chunk in r.iter_content(100000):
     subfile.write(chunk)
@@ -60,23 +61,28 @@ end_time = None
 if song_srt[-3:]=="srt":
     s = pysrt.open(song_srt,encoding="iso-8859-1")
     start_phrase = input("Enter starting phrase: ")
+    start_phrase = start_phrase.lower().split()
     end_phrase = input("Enter ending phrase: ")
+    end_phrase = end_phrase.lower().split()
     start_time = None
     end_time = None
     lyrics = ""
-    for i in s.data:
+    for ind in range(len(s.data)):
+        i = s.data[ind]
         set_this = False
-        if start_phrase.lower() in i.text.lower():
-            dummy = i.start
-            start_time = dummy.minutes * 60 + dummy.seconds
-            lyrics = i.text.strip() + " "
-            set_this = True
-        if (end_phrase.lower() in i.text.lower()) and (start_time is not None):
-            dummy = i.end
-            end_time = dummy.minutes * 60 + dummy.seconds
-            if not set_this :
-                lyrics += i.text.strip() + " "
-            break
+        if start_phrase[0] in i.text.lower():
+            if (all(item in i.text.lower() for item in start_phrase) or (ind != len(s.data)-1 and all(item in i.text.lower() or item in s.data[ind+1].text.lower() for item in start_phrase))):
+                dummy = i.start
+                start_time = dummy.minutes * 60 + dummy.seconds
+                lyrics = i.text.strip() + " "
+                set_this = True
+        if (end_phrase[len(end_phrase) - 1] in i.text.lower()) and (start_time is not None):
+            if (all(item in i.text.lower() for item in end_phrase) or (ind != 0 and all(item in i.text.lower() or item in s.data[ind-1].text.lower() for item in end_phrase))):
+                dummy = i.end
+                end_time = dummy.minutes * 60 + dummy.seconds
+                if not set_this :
+                    lyrics += i.text.strip() + " "
+                break
         if (start_time is not None) and (not set_this) :
             lyrics += i.text.strip() + " "
 
@@ -87,16 +93,22 @@ if song_srt[-3:]=="srt":
 
     url = "https://www.youtube.com/results?search_query=" + song_full_name[:-6]
     r = requests.get(url)
-    soup=BeautifulSoup(r.content)
+    soup=BeautifulSoup(r.content, "lxml")
     to_url = None
     for row in soup.find_all('a'):
+        if (not row.get('href')):
+            continue
         if (not row.get('href')[:9] == "/watch?v="):
             continue
-        span_in = row.find('span', {"class" : "video-time"}).contents[0]
+        span_in = row.find('span', {"class" : "video-time"})
+        if not span_in:
+            continue
+        span_in = span_in.contents[0]
         total_time_this = (ord(span_in[0])-ord('0'))*60 + (ord(span_in[2])- ord('0'))*10 + ord(span_in[3])- ord('0')
         if(abs(total_time_this - total_time) < 30):
             to_url = "https://www.youtube.com" + row["href"] + "&start=" + str(start_time) + "&end=" + str(end_time)
             break
+
     print ("Start Time of phrase is: " + str(int(start_time/60)) + ":" + str(start_time%60))
     print ("End Time of phrase is: " + str(int(end_time/60)) + ":" + str(end_time%60))
     if to_url is not None:
